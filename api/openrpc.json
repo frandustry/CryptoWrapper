@@ -1,0 +1,393 @@
+{
+  "openrpc": "1.4.0",
+  "info": {
+    "title": "CryptoWrapper RPC",
+    "description": "Local JSON-RPC 2.0 API over stdio. Secret bytes use the independent CWS1 channel.",
+    "version": "1.0.0",
+    "license": {
+      "name": "GPL-3.0-only",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  },
+  "externalDocs": {
+    "description": "Protocol and security documentation",
+    "url": "https://github.com/frandustry/CryptoWrapper/blob/main/RPC.md"
+  },
+  "servers": [
+    {
+      "name": "stdio",
+      "url": "stdio://",
+      "summary": "One compact JSON object per LF-terminated line"
+    }
+  ],
+  "methods": [
+    {
+      "name": "rpc.discover",
+      "summary": "Return this OpenRPC document",
+      "params": [],
+      "result": {"name": "openrpc", "schema": {"type": "object"}}
+    },
+    {
+      "name": "system.handshake",
+      "summary": "Negotiate protocol versions and capabilities",
+      "params": [],
+      "result": {"name": "handshake", "schema": {"$ref": "#/components/schemas/Handshake"}}
+    },
+    {
+      "name": "system.capabilities",
+      "summary": "Return methods and runtime capabilities",
+      "params": [],
+      "result": {"name": "capabilities", "schema": {"$ref": "#/components/schemas/Handshake"}}
+    },
+    {
+      "name": "system.doctor",
+      "summary": "Check OpenSSL, providers, and linked libcrypto",
+      "params": [],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"},
+      "errors": [{"$ref": "#/components/errors/DependencyError"}]
+    },
+    {
+      "name": "algorithms.list",
+      "summary": "List algorithms exposed by OpenSSL providers",
+      "paramStructure": "by-name",
+      "params": [
+        {"name": "category", "required": false, "schema": {"type": "string", "enum": ["keys", "ciphers", "digests", "signatures"], "default": "keys"}},
+        {"name": "all", "required": false, "schema": {"type": "boolean", "default": false}}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "key.generate",
+      "summary": "Generate an asymmetric private and public key pair",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/Algorithm"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"name": "public_out", "required": false, "schema": {"type": "string"}},
+        {"name": "bits", "required": false, "schema": {"type": "integer", "minimum": 2048}},
+        {"name": "curve", "required": false, "schema": {"type": "string"}},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/AllowLegacy"},
+        {"name": "openssl_name", "required": false, "schema": {"type": "string"}},
+        {"name": "pkeyopt", "required": false, "schema": {"type": "array", "items": {"type": "string"}}},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "key.generateSymmetric",
+      "summary": "Generate a restricted hexadecimal symmetric key file",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/Algorithm"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Force"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "key.derive",
+      "summary": "Derive a shared secret",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"name": "peer_key", "required": true, "schema": {"type": "string"}},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "certificate.generate",
+      "summary": "Generate a self-signed X.509 certificate",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Subject"},
+        {"$ref": "#/components/contentDescriptors/Days"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "certificate.issue",
+      "summary": "Issue an X.509 certificate for a public key",
+      "paramStructure": "by-name",
+      "params": [
+        {"name": "ca_certificate", "required": true, "schema": {"type": "string"}},
+        {"name": "ca_key", "required": true, "schema": {"type": "string"}},
+        {"name": "public_key", "required": true, "schema": {"type": "string"}},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Subject"},
+        {"$ref": "#/components/contentDescriptors/Days"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.encrypt",
+      "summary": "Encrypt a file for X.509 recipients using CMS",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"name": "recipients", "required": true, "schema": {"type": "array", "minItems": 1, "items": {"type": "string"}}},
+        {"$ref": "#/components/contentDescriptors/Cipher"},
+        {"$ref": "#/components/contentDescriptors/Force"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.decrypt",
+      "summary": "Decrypt recipient CMS",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"name": "certificate", "required": true, "schema": {"type": "string"}},
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.encryptSymmetric",
+      "summary": "Encrypt CMS EncryptedData with a raw key",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"$ref": "#/components/contentDescriptors/Cipher"},
+        {"$ref": "#/components/contentDescriptors/Force"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.decryptSymmetric",
+      "summary": "Decrypt CMS EncryptedData with a raw key",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"$ref": "#/components/contentDescriptors/Force"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.encryptPassword",
+      "summary": "Encrypt with CMS PasswordRecipientInfo",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/RequiredSecretRef"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.decryptPassword",
+      "summary": "Decrypt CMS PasswordRecipientInfo",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/RequiredSecretRef"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.sign",
+      "summary": "Create a detached signature",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"name": "key_type", "required": false, "schema": {"type": "string"}},
+        {"name": "digest", "required": false, "schema": {"type": "string"}},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.verify",
+      "summary": "Verify a detached signature",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Key"},
+        {"name": "signature", "required": true, "schema": {"type": "string"}},
+        {"name": "key_type", "required": false, "schema": {"type": "string"}},
+        {"name": "digest", "required": false, "schema": {"type": "string"}}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"},
+      "errors": [{"$ref": "#/components/errors/VerificationError"}]
+    },
+    {
+      "name": "file.hash",
+      "summary": "Hash a file",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Algorithm"},
+        {"$ref": "#/components/contentDescriptors/AllowLegacy"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "file.inspect",
+      "summary": "Inspect a key, certificate, or CMS file",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"name": "type", "required": true, "schema": {"type": "string", "enum": ["public-key", "private-key", "certificate", "cms"]}},
+        {"$ref": "#/components/contentDescriptors/SecretRef"},
+        {"$ref": "#/components/contentDescriptors/NoPassphrase"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "compat.encrypt",
+      "summary": "Explicitly use unauthenticated OpenSSL enc encryption",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Cipher"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/AllowLegacy"},
+        {"$ref": "#/components/contentDescriptors/RequiredSecretRef"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "compat.decrypt",
+      "summary": "Explicitly use unauthenticated OpenSSL enc decryption",
+      "paramStructure": "by-name",
+      "params": [
+        {"$ref": "#/components/contentDescriptors/In"},
+        {"$ref": "#/components/contentDescriptors/Out"},
+        {"$ref": "#/components/contentDescriptors/Cipher"},
+        {"$ref": "#/components/contentDescriptors/Force"},
+        {"$ref": "#/components/contentDescriptors/AllowLegacy"},
+        {"$ref": "#/components/contentDescriptors/RequiredSecretRef"}
+      ],
+      "result": {"$ref": "#/components/contentDescriptors/OperationResult"}
+    },
+    {
+      "name": "operation.cancel",
+      "summary": "Request cancellation of an in-flight request",
+      "paramStructure": "by-name",
+      "params": [
+        {"name": "request_id", "required": true, "schema": {"oneOf": [{"type": "string"}, {"type": "integer"}]}}
+      ],
+      "result": {
+        "name": "cancellation",
+        "schema": {
+          "type": "object",
+          "required": ["schema_version", "requested", "request_id"],
+          "properties": {
+            "schema_version": {"type": "string", "const": "1"},
+            "requested": {"type": "boolean"},
+            "request_id": {}
+          }
+        }
+      }
+    }
+  ],
+  "components": {
+    "contentDescriptors": {
+      "Algorithm": {"name": "algorithm", "required": true, "schema": {"type": "string"}},
+      "In": {"name": "in", "required": true, "schema": {"type": "string"}},
+      "Out": {"name": "out", "required": true, "schema": {"type": "string"}},
+      "Key": {"name": "key", "required": true, "schema": {"type": "string"}},
+      "Subject": {"name": "subject", "required": true, "schema": {"type": "string", "pattern": "^/"}},
+      "Days": {"name": "days", "required": false, "schema": {"type": "integer", "minimum": 1, "default": 365}},
+      "Cipher": {"name": "cipher", "required": false, "schema": {"type": "string"}},
+      "Force": {"name": "force", "required": false, "schema": {"type": "boolean", "default": false}},
+      "AllowLegacy": {"name": "allow_legacy", "required": false, "schema": {"type": "boolean", "default": false}},
+      "SecretRef": {
+        "name": "secret_ref",
+        "description": "One-use opaque reference matching a CWS1 secret frame",
+        "required": false,
+        "schema": {"type": "string", "minLength": 1, "maxLength": 256}
+      },
+      "RequiredSecretRef": {
+        "name": "secret_ref",
+        "description": "One-use opaque reference matching a CWS1 secret frame",
+        "required": true,
+        "schema": {"type": "string", "minLength": 1, "maxLength": 256}
+      },
+      "NoPassphrase": {
+        "name": "no_passphrase",
+        "description": "Explicitly select an unencrypted private key instead of secret_ref",
+        "required": false,
+        "schema": {"type": "boolean", "default": false}
+      },
+      "OperationResult": {"name": "result", "schema": {"$ref": "#/components/schemas/OperationResult"}}
+    },
+    "schemas": {
+      "OperationResult": {
+        "type": "object",
+        "required": ["schema_version", "ok"],
+        "properties": {
+          "schema_version": {"type": "string", "const": "1"},
+          "ok": {"type": "boolean"},
+          "algorithm": {"type": "string"},
+          "outputs": {"type": "object", "additionalProperties": {"type": "string"}},
+          "fingerprints": {"type": "object", "additionalProperties": {"type": "string"}},
+          "data": {}
+        },
+        "additionalProperties": false
+      },
+      "Handshake": {
+        "type": "object",
+        "required": ["protocol_version", "schema_version", "product", "version", "commit", "build_date", "transport", "methods", "features", "secret_channel", "runtime"],
+        "properties": {
+          "protocol_version": {"type": "string", "const": "1"},
+          "schema_version": {"type": "string", "const": "1"},
+          "product": {"type": "string", "const": "CryptoWrapper"},
+          "version": {"type": "string"},
+          "commit": {"type": "string"},
+          "build_date": {"type": "string"},
+          "transport": {"type": "string", "const": "json-rpc-2.0/stdio-line"},
+          "methods": {"type": "array", "items": {"type": "string"}},
+          "features": {"type": "object", "additionalProperties": {"type": "boolean"}},
+          "secret_channel": {"type": "object"},
+          "runtime": {"type": "object"}
+        }
+      }
+    },
+    "errors": {
+      "GeneralError": {"code": 1001, "message": "General operation error"},
+      "UsageError": {"code": 1002, "message": "Invalid operation parameters"},
+      "DependencyError": {"code": 1003, "message": "Missing or unsupported dependency"},
+      "VerificationError": {"code": 1004, "message": "Verification or authentication failed"},
+      "SecretError": {"code": 1010, "message": "Secret channel error"}
+    }
+  },
+  "x-cryptowrapper": {
+    "protocolVersion": "1",
+    "schemaVersion": "1",
+    "messageFraming": "one compact JSON object per LF-terminated line",
+    "secretFraming": "CWS1",
+    "secretFileDescriptor": 3,
+    "progressNotification": "operation.progress"
+  }
+}

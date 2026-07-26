@@ -12,6 +12,7 @@ import (
 	"github.com/creachadair/jrpc2"
 	"github.com/creachadair/jrpc2/channel"
 	"github.com/creachadair/jrpc2/handler"
+	"github.com/frandustry/CryptoWrapper/api"
 )
 
 const (
@@ -45,8 +46,9 @@ func New(config Config, secretReader io.Reader) (*Service, error) {
 // cancelled. stdout must be reserved exclusively for protocol messages.
 func (s *Service) Serve(ctx context.Context, input io.Reader, output io.Writer) error {
 	server := jrpc2.NewServer(s.methods, &jrpc2.ServerOptions{
-		AllowPush:   true,
-		Concurrency: 4,
+		AllowPush:      true,
+		Concurrency:    4,
+		DisableBuiltin: true,
 		NewContext: func() context.Context {
 			return ctx
 		},
@@ -125,10 +127,15 @@ func (s *Service) methodHandlers() handler.Map {
 		"key.generate":          strict(s.generateKey),
 		"key.generateSymmetric": strict(s.generateSymmetricKey),
 		"operation.cancel":      strict(s.cancelOperation),
+		"rpc.discover":          strict(s.discover),
 		"system.capabilities":   strict(s.systemCapabilities),
 		"system.doctor":         strict(s.systemDoctor),
 		"system.handshake":      strict(s.systemHandshake),
 	}
+}
+
+func (s *Service) discover(context.Context) json.RawMessage {
+	return append(json.RawMessage(nil), api.OpenRPC...)
 }
 
 func strict(function any) jrpc2.Handler {

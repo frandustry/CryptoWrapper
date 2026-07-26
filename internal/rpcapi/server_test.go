@@ -7,10 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/frandustry/CryptoWrapper/api"
 )
 
 func TestHandshakeAdvertisesVersionedCapabilities(t *testing.T) {
@@ -32,6 +35,42 @@ func TestHandshakeAdvertisesVersionedCapabilities(t *testing.T) {
 	}
 	if !contains(result.Methods, "file.sign") || !contains(result.Methods, "operation.cancel") {
 		t.Fatalf("expected methods missing: %v", result.Methods)
+	}
+}
+
+func TestOpenRPCMethodSetMatchesServer(t *testing.T) {
+	service := newTestService(t, nil, successfulRunner)
+	var document struct {
+		Methods []struct {
+			Name string `json:"name"`
+		} `json:"methods"`
+	}
+	if err := json.Unmarshal(api.OpenRPC, &document); err != nil {
+		t.Fatal(err)
+	}
+	documentMethods := make([]string, 0, len(document.Methods))
+	for _, method := range document.Methods {
+		documentMethods = append(documentMethods, method.Name)
+	}
+	sort.Strings(documentMethods)
+	serverMethods := service.methodNames()
+	if strings.Join(documentMethods, "\n") != strings.Join(serverMethods, "\n") {
+		t.Fatalf("OpenRPC methods do not match server\nOpenRPC: %v\nserver: %v", documentMethods, serverMethods)
+	}
+
+	output := serveRequests(t, service,
+		`{"jsonrpc":"2.0","id":"discover","method":"rpc.discover"}`+"\n")
+	response := responseWithID(t, output, `"discover"`)
+	result, err := json.Marshal(response["result"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var discovered map[string]any
+	if err := json.Unmarshal(result, &discovered); err != nil {
+		t.Fatal(err)
+	}
+	if discovered["openrpc"] != "1.4.0" {
+		t.Fatalf("unexpected discovered document: %v", discovered["openrpc"])
 	}
 }
 
