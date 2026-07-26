@@ -21,6 +21,7 @@ check:
 	test -z "$$(gofmt -l $$(find . -name '*.go' -not -path './.cache/*'))"
 	$(GO) vet ./...
 	$(GO) test -race ./...
+	if command -v swiftc >/dev/null 2>&1; then swiftc -typecheck examples/swift/CryptoWrapperRPC.swift; fi
 	git diff --check
 
 install:

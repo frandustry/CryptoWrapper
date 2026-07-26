@@ -60,6 +60,11 @@ Generate shell completions:
 make completions
 ```
 
+Applications can use the versioned, local JSON-RPC interface without
+reconstructing CLI arguments. See [CryptoWrapper RPC v1](RPC.md), the embedded
+[OpenRPC contract](api/openrpc.json), and the Go and Swift examples under
+`examples/`.
+
 `CGO_ENABLED=0 go build ./cmd/cw` is supported. That build can perform
 key, certificate, signature, recipient-CMS, hashing, and compatibility
 operations, but intentionally refuses password and raw-symmetric-key CMS

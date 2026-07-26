@@ -55,6 +55,10 @@ make install
 make completions
 ```
 
+其他应用可以通过带版本的本地 JSON-RPC 接口调用 CryptoWrapper，无需重新拼接
+CLI 参数。参见 [CryptoWrapper RPC v1](RPC.zh-CN.md)、内嵌
+[OpenRPC 规范](api/openrpc.json) 以及 `examples/` 下的 Go 和 Swift 示例。
+
 也可以使用 `CGO_ENABLED=0 go build ./cmd/cw`。无 CGO 版本仍支持密钥、证书、
 签名、证书收件人 CMS、哈希和兼容命令，但会明确拒绝密码 CMS 和原始对称密钥
 CMS。
