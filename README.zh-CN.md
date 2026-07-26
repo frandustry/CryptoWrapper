@@ -87,22 +87,11 @@ ad-hoc 签名不代表 Developer ID 身份，也不等同于 Apple 公证；Gate
 
 ## 快速使用
 
-先播放录好的终端演示：
+[![观看 CryptoWrapper CLI 演示](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo-poster.png)](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo.mp4)
 
-```sh
-asciinema play demo/cryptowrapper.cast
-```
-
-macOS 可以用 `brew install asciinema` 安装播放器，Debian/Ubuntu 可以用
-`sudo apt install asciinema`；其他系统参见
-[asciinema 官方安装说明](https://docs.asciinema.org/manual/cli/installation/)。
-
+[直接在浏览器中观看 MP4 演示](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo.mp4)。
 为了能够无人值守地录制，演示使用一次性的未加密私钥。真实私钥应使用默认的隐藏
-口令输入，或权限为 `0600` 的口令文件。CLI 输出变化后可以重新录制：
-
-```sh
-make demo
-```
+口令输入，或权限为 `0600` 的口令文件。
 
 生成默认 3072 位、加密保存的 RSA 密钥：
 

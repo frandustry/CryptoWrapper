@@ -99,24 +99,12 @@ binary in System Settings.
 
 ## Quick start
 
-Watch the recorded terminal walkthrough:
+[![Watch the CryptoWrapper CLI demo](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo-poster.png)](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo.mp4)
 
-```sh
-asciinema play demo/cryptowrapper.cast
-```
-
-Install the player with `brew install asciinema` on macOS or
-`sudo apt install asciinema` on Debian/Ubuntu. Other supported installation
-methods are listed in the
-[official asciinema installation guide](https://docs.asciinema.org/manual/cli/installation/).
-
-The recording uses a disposable unencrypted key so it can run unattended.
+[Watch the browser-friendly MP4 demo](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo.mp4).
+It uses a disposable unencrypted key so the recording can run unattended.
 Real private keys should use CryptoWrapper's default hidden passphrase prompt
-or a mode-`0600` passphrase file. Re-record it after changing CLI output with:
-
-```sh
-make demo
-```
+or a mode-`0600` passphrase file.
 
 Generate an encrypted RSA key pair:
 
