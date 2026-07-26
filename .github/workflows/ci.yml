@@ -17,8 +17,8 @@ jobs:
       matrix:
         openssl: ["3.6.3", "4.0.1"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.24.x"
           cache: true
@@ -37,6 +37,8 @@ jobs:
           ./Configure shared --prefix="${RUNNER_TEMP}/openssl" --openssldir="${RUNNER_TEMP}/openssl/ssl"
           make -j2
           make install_sw
+          mkdir -p "${RUNNER_TEMP}/openssl/ssl"
+          cp apps/openssl.cnf "${RUNNER_TEMP}/openssl/ssl/openssl.cnf"
           {
             echo "${RUNNER_TEMP}/openssl/bin"
           } >> "${GITHUB_PATH}"
@@ -56,8 +58,8 @@ jobs:
     name: macOS / Homebrew OpenSSL
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.24.x"
           cache: true
@@ -78,8 +80,8 @@ jobs:
     name: No-CGO fallback
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.24.x"
           cache: true
