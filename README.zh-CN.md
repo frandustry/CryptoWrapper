@@ -68,9 +68,10 @@ SHA-256 校验文件和汇总的 `SHA256SUMS`。
 预编译程序仍需要上文所述的兼容 OpenSSL 环境。安装包长期保存在 GitHub
 Releases 中，Actions 中转 artifact 只保留一天。
 
-当前 macOS 压缩包没有 Developer ID 签名，也没有经过 Apple 公证。推荐 macOS
-用户按上文 Homebrew 配置从源码编译。高级用户若使用预编译包，应先验证 SHA-256
-校验和，也可以在本机应用 ad-hoc 签名：
+当前 macOS 压缩包没有 Developer ID 签名，也没有经过 Apple 公证。ARM64 文件
+可能带有 Go 链接器生成的 ad-hoc 签名，而 AMD64 文件可能完全未签名；两者都不能
+建立可信开发者身份。推荐 macOS 用户按上文 Homebrew 配置从源码编译。高级用户若
+使用预编译包，应先验证 SHA-256 校验和，也可以在本机应用或替换 ad-hoc 签名：
 
 ```sh
 codesign --force --sign - ./cw

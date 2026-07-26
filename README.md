@@ -76,10 +76,12 @@ The binaries still require a compatible OpenSSL installation as described
 above. Release assets are retained by GitHub Releases rather than as
 long-lived GitHub Actions artifacts.
 
-The macOS archives are currently unsigned and not notarized. The recommended
-macOS path is to build from source using the Homebrew setup above. Advanced
-users who choose a prebuilt archive should verify its SHA-256 checksum first
-and may apply a local ad-hoc signature:
+The macOS archives are not Developer ID-signed or notarized. The ARM64 binary
+may carry an ad-hoc signature added by the Go linker, while the AMD64 binary
+may be unsigned; neither establishes a trusted developer identity. The
+recommended macOS path is to build from source using the Homebrew setup above.
+Advanced users who choose a prebuilt archive should verify its SHA-256
+checksum first and may apply or replace a local ad-hoc signature:
 
 ```sh
 codesign --force --sign - ./cw
