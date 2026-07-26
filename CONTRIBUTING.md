@@ -27,3 +27,16 @@ make integration-test
 
 Use a focused branch and describe the security impact and validation in the
 pull request.
+
+## Cutting a release
+
+Release publication is tag-driven. From a clean, fully tested `main` branch,
+create and push an annotated semantic version tag:
+
+```sh
+git tag -a v0.1.0 -m "CryptoWrapper v0.1.0"
+git push origin v0.1.0
+```
+
+The Release workflow builds Linux and macOS archives for AMD64 and ARM64,
+verifies their checksums, and publishes them with generated release notes.

@@ -61,6 +61,17 @@ key, certificate, signature, recipient-CMS, hashing, and compatibility
 operations, but intentionally refuses password and raw-symmetric-key CMS
 commands.
 
+## Prebuilt releases
+
+Pushing a semantic version tag such as `v0.1.0` automatically builds and
+publishes release archives for Linux and macOS on both AMD64 and ARM64.
+Every release includes individual SHA-256 checksum files and a consolidated
+`SHA256SUMS` file.
+
+The binaries still require a compatible OpenSSL installation as described
+above. Release assets are retained by GitHub Releases rather than as
+long-lived GitHub Actions artifacts.
+
 ## Quick start
 
 Generate an encrypted RSA key pair:

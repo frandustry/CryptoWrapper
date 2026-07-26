@@ -18,6 +18,7 @@ make -C "$repo_root" clean build completions VERSION="$version"
 mkdir -p "$repo_root/dist" "$staging_dir/$archive_name"
 cp "$repo_root/bin/cw" "$repo_root/LICENSE" "$repo_root/README.md" \
   "$repo_root/README.zh-CN.md" "$repo_root/SECURITY.md" \
+  "$repo_root/THIRD_PARTY_LICENSES.md" \
   "$staging_dir/$archive_name/"
 cp -R "$repo_root/bin/completions" "$staging_dir/$archive_name/"
 

@@ -56,6 +56,15 @@ make completions
 签名、证书收件人 CMS、哈希和兼容命令，但会明确拒绝密码 CMS 和原始对称密钥
 CMS。
 
+## 预编译版本
+
+推送 `v0.1.0` 之类的语义化版本标签后，GitHub Actions 会自动为 Linux 和
+macOS 的 AMD64、ARM64 架构编译并发布 Release。每个 Release 都包含单独的
+SHA-256 校验文件和汇总的 `SHA256SUMS`。
+
+预编译程序仍需要上文所述的兼容 OpenSSL 环境。安装包长期保存在 GitHub
+Releases 中，Actions 中转 artifact 只保留一天。
+
 ## 快速使用
 
 生成默认 3072 位、加密保存的 RSA 密钥：
