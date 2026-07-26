@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/frandustry/CryptoWrapper/internal/cmslib"
 	"github.com/frandustry/CryptoWrapper/internal/openssl"
 	"github.com/spf13/cobra"
 )
@@ -45,17 +46,38 @@ func newDoctorCommand(g *globals) *cobra.Command {
 				return ExitError{Code: 3, Err: fmt.Errorf(
 					"unsupported OpenSSL %s; require 3.6.3+ or 4.0.1+", version)}
 			}
+			libcryptoData := map[string]any{
+				"available": cmslib.Available(),
+				"version":   cmslib.LibraryVersion(),
+			}
+			if cmslib.Available() {
+				libraryVersion, parseErr := openssl.ParseVersion(cmslib.LibraryVersion())
+				if parseErr != nil {
+					return ExitError{Code: 3, Err: fmt.Errorf("parse libcrypto version: %w", parseErr)}
+				}
+				libcryptoData["parsed_version"] = libraryVersion
+				if !libraryVersion.Supported() {
+					return ExitError{Code: 3, Err: fmt.Errorf("unsupported libcrypto %s", libraryVersion)}
+				}
+				if libraryVersion.Major != version.Major || libraryVersion.Minor != version.Minor {
+					return ExitError{Code: 3, Err: fmt.Errorf(
+						"openssl CLI %s and libcrypto %s must use the same major/minor series",
+						version, libraryVersion)}
+				}
+			}
 			data := map[string]any{
 				"openssl_path": client.Path,
 				"version":      version,
 				"providers":    providers,
 				"supported":    true,
+				"libcrypto":    libcryptoData,
 			}
 			if g.jsonOutput {
 				return writeJSON(cmd.OutOrStdout(), result{OK: true, Data: data})
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "OpenSSL: %s (%s)\n", version, client.Path)
 			fmt.Fprintf(cmd.OutOrStdout(), "Providers: %s\n", strings.Join(providers, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), "libcrypto: %s\n", cmslib.LibraryVersion())
 			fmt.Fprintln(cmd.OutOrStdout(), "Status: supported")
 			return nil
 		},

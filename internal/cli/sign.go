@@ -171,7 +171,7 @@ func inferPublicKeyType(ctx context.Context, client *openssl.Client, key string)
 func classifyKeyText(text string) string {
 	upper := strings.ToUpper(text)
 	for _, name := range []string{
-		"SLH-DSA", "ML-DSA", "ED25519", "ED448", "SM2", "X25519", "X448",
+		"SLH-DSA", "ML-DSA", "ML-KEM", "ED25519", "ED448", "SM2", "X25519", "X448",
 	} {
 		if strings.Contains(upper, name) {
 			return strings.ToLower(name)
