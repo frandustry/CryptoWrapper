@@ -57,7 +57,7 @@ func newCompatCryptCommand(g *globals, decrypt bool) *cobra.Command {
 			if isLegacyCipher(cipher) && !g.allowLegacy {
 				return ExitError{Code: 2, Err: fmt.Errorf("%s is legacy; also pass --allow-legacy", cipher)}
 			}
-			passphrase, err := passFlags.read(!decrypt, "Compatibility encryption passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), !decrypt, "Compatibility encryption passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}

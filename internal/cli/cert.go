@@ -35,7 +35,7 @@ func newCertGenCommand(g *globals) *cobra.Command {
 			if days < 1 {
 				return ExitError{Code: 2, Err: fmt.Errorf("--days must be positive")}
 			}
-			passphrase, err := passFlags.read(false, "Private-key passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), false, "Private-key passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}
@@ -109,7 +109,7 @@ func newCertIssueCommand(g *globals) *cobra.Command {
 			serialBytes[0] &= 0x7f
 			serial := "0x" + hex.EncodeToString(serialBytes)
 			secureio.Zero(serialBytes)
-			passphrase, err := passFlags.read(false, "CA private-key passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), false, "CA private-key passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}

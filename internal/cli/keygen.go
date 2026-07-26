@@ -76,7 +76,7 @@ func newKeygenCommand(g *globals) *cobra.Command {
 					return ExitError{Code: 2, Err: fmt.Errorf("invalid --pkeyopt %q; expected name:value", option)}
 				}
 			}
-			passphrase, err := passFlags.read(true, "Private-key passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), true, "Private-key passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}

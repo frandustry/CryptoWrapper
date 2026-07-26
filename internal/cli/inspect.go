@@ -46,7 +46,7 @@ func newInspectCommand(g *globals) *cobra.Command {
 			}
 			var output []byte
 			if usePassphrase {
-				passphrase, passErr := passFlags.read(false, "Private-key passphrase: ")
+				passphrase, passErr := passFlags.read(cmd.Context(), false, "Private-key passphrase: ")
 				if passErr != nil {
 					return ExitError{Code: 2, Err: passErr}
 				}

@@ -33,7 +33,12 @@ func addPassphraseFlags(command *cobra.Command, flags *passphraseFlags, allowNon
 	}
 }
 
-func (flags passphraseFlags) read(confirm bool, prompt string) ([]byte, error) {
+func (flags passphraseFlags) read(ctx context.Context, confirm bool, prompt string) ([]byte, error) {
+	if flags.file == "" && flags.env == "" && !flags.none {
+		if passphrase, ok := secureio.PassphraseFromContext(ctx); ok {
+			return passphrase, nil
+		}
+	}
 	return secureio.ReadPassphrase(secureio.PassphraseOptions{
 		File:    flags.file,
 		Env:     flags.env,

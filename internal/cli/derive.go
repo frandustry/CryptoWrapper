@@ -25,7 +25,7 @@ func newDeriveCommand(g *globals) *cobra.Command {
 			if key == "" || peerKey == "" || output == "" {
 				return ExitError{Code: 2, Err: fmt.Errorf("--key, --peer-key, and --out are required")}
 			}
-			passphrase, err := passFlags.read(false, "Private-key passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), false, "Private-key passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}

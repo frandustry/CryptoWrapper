@@ -72,6 +72,7 @@ func New(version, commit, date string) *cobra.Command {
 	root.AddCommand(newPassEncryptCommand(g))
 	root.AddCommand(newPassDecryptCommand(g))
 	root.AddCommand(newCompatCommand(g))
+	root.AddCommand(newRPCCommand(g))
 	root.AddCommand(newCompletionCommand(root))
 
 	return root

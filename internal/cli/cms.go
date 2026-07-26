@@ -107,7 +107,7 @@ func newDecryptCommand(g *globals) *cobra.Command {
 			if certificate == "" || key == "" || output == "" {
 				return ExitError{Code: 2, Err: fmt.Errorf("--cert, --key, and --out are required")}
 			}
-			passphrase, err := passFlags.read(false, "Private-key passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), false, "Private-key passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}
@@ -250,7 +250,7 @@ func newPassEncryptCommand(g *globals) *cobra.Command {
 			if output == "" {
 				return ExitError{Code: 2, Err: fmt.Errorf("--out is required")}
 			}
-			passphrase, err := passFlags.read(true, "Encryption passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), true, "Encryption passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}
@@ -289,7 +289,7 @@ func newPassDecryptCommand(g *globals) *cobra.Command {
 			if output == "" {
 				return ExitError{Code: 2, Err: fmt.Errorf("--out is required")}
 			}
-			passphrase, err := passFlags.read(false, "Decryption passphrase: ")
+			passphrase, err := passFlags.read(cmd.Context(), false, "Decryption passphrase: ")
 			if err != nil {
 				return ExitError{Code: 2, Err: err}
 			}

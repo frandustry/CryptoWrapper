@@ -4,6 +4,7 @@ package secureio
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -11,12 +12,27 @@ import (
 	"golang.org/x/term"
 )
 
+type passphraseContextKey struct{}
+
 type PassphraseOptions struct {
 	File    string
 	Env     string
 	None    bool
 	Confirm bool
 	Prompt  string
+}
+
+// WithPassphrase attaches a caller-supplied passphrase to an operation context.
+// It is intended for trusted in-process transports such as the RPC adapter, so
+// a secret never has to appear in argv or the environment.
+func WithPassphrase(ctx context.Context, passphrase []byte) context.Context {
+	return context.WithValue(ctx, passphraseContextKey{}, passphrase)
+}
+
+// PassphraseFromContext returns the caller-supplied passphrase, if present.
+func PassphraseFromContext(ctx context.Context) ([]byte, bool) {
+	passphrase, ok := ctx.Value(passphraseContextKey{}).([]byte)
+	return passphrase, ok
 }
 
 func ReadPassphrase(options PassphraseOptions) ([]byte, error) {
