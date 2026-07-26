@@ -45,6 +45,9 @@ func New(config Config, secretReader io.Reader) (*Service, error) {
 // Serve runs a newline-framed JSON-RPC 2.0 server until input closes or ctx is
 // cancelled. stdout must be reserved exclusively for protocol messages.
 func (s *Service) Serve(ctx context.Context, input io.Reader, output io.Writer) error {
+	if s.secrets != nil {
+		defer s.secrets.Close()
+	}
 	server := jrpc2.NewServer(s.methods, &jrpc2.ServerOptions{
 		AllowPush:      true,
 		Concurrency:    4,
@@ -188,7 +191,7 @@ func (s *Service) runOperation(
 	if secretParams.SecretRef != "" {
 		s.notifyProgress(ctx, "awaiting_secret")
 		var err error
-		secret, err = s.secrets.Read(secretParams.SecretRef)
+		secret, err = s.secrets.Read(ctx, secretParams.SecretRef)
 		if err != nil {
 			s.notifyProgress(ctx, "failed")
 			return nil, secretError(err)

@@ -4,6 +4,7 @@ package rpcapi
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestSecretFrameRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	secret, err := NewSecretReader(bytes.NewReader(frame)).Read("request-secret")
+	secret, err := NewSecretReader(bytes.NewReader(frame)).Read(context.Background(), "request-secret")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,18 +24,46 @@ func TestSecretFrameRoundTrip(t *testing.T) {
 	zero(secret)
 }
 
-func TestSecretFrameRejectsMismatchedReference(t *testing.T) {
+func TestSecretFramesAreDemultiplexedByReference(t *testing.T) {
+	frame, err := AppendSecretFrame(nil, "second", []byte("second-secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	frame, err = AppendSecretFrame(frame, "first", []byte("first-secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader := NewSecretReader(bytes.NewReader(frame))
+	first, err := reader.Read(context.Background(), "first")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := reader.Read(context.Background(), "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(first) != "first-secret" || string(second) != "second-secret" {
+		t.Fatalf("unexpected secrets: %q %q", first, second)
+	}
+	zero(first)
+	zero(second)
+	reader.Close()
+}
+
+func TestSecretFrameMissingReferenceDoesNotLeak(t *testing.T) {
 	frame, err := AppendSecretFrame(nil, "first", []byte("must-not-leak"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = NewSecretReader(bytes.NewReader(frame)).Read("second")
-	if err == nil || !strings.Contains(err.Error(), "does not match") {
-		t.Fatalf("Read() error = %v, want reference mismatch", err)
+	reader := NewSecretReader(bytes.NewReader(frame))
+	_, err = reader.Read(context.Background(), "second")
+	if err == nil || !strings.Contains(err.Error(), "read secret frame header") {
+		t.Fatalf("Read() error = %v, want exhausted channel", err)
 	}
 	if strings.Contains(err.Error(), "must-not-leak") {
 		t.Fatalf("secret leaked in error: %v", err)
 	}
+	reader.Close()
 }
 
 func TestSecretFrameLimits(t *testing.T) {
