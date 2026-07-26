@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-openssl:
+    name: Linux / OpenSSL ${{ matrix.openssl }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        openssl: ["3.6.3", "4.0.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Build OpenSSL
+        env:
+          OPENSSL_VERSION: ${{ matrix.openssl }}
+        run: |
+          set -euo pipefail
+          archive="openssl-${OPENSSL_VERSION}.tar.gz"
+          curl -fL "https://www.openssl.org/source/${archive}" -o "${archive}"
+          curl -fsSL "https://www.openssl.org/source/${archive}.sha256" -o checksum
+          expected="$(awk '{print $1}' checksum)"
+          printf '%s  %s\n' "${expected}" "${archive}" | sha256sum -c -
+          tar -xzf "${archive}"
+          cd "openssl-${OPENSSL_VERSION}"
+          ./Configure shared --prefix="${RUNNER_TEMP}/openssl" --openssldir="${RUNNER_TEMP}/openssl/ssl"
+          make -j2
+          make install_sw
+          {
+            echo "${RUNNER_TEMP}/openssl/bin"
+          } >> "${GITHUB_PATH}"
+          {
+            echo "PKG_CONFIG_PATH=${RUNNER_TEMP}/openssl/lib64/pkgconfig:${RUNNER_TEMP}/openssl/lib/pkgconfig"
+            echo "LD_LIBRARY_PATH=${RUNNER_TEMP}/openssl/lib64:${RUNNER_TEMP}/openssl/lib"
+          } >> "${GITHUB_ENV}"
+      - name: Check
+        run: |
+          openssl version
+          make check
+          make build
+          ./bin/cw doctor
+          make integration-test
+
+  macos:
+    name: macOS / Homebrew OpenSSL
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Configure OpenSSL
+        run: |
+          brew install openssl@3 pkg-config
+          prefix="$(brew --prefix openssl@3)"
+          echo "${prefix}/bin" >> "${GITHUB_PATH}"
+          echo "PKG_CONFIG_PATH=${prefix}/lib/pkgconfig" >> "${GITHUB_ENV}"
+      - name: Check
+        run: |
+          make check
+          make build
+          ./bin/cw doctor
+          make integration-test
+
+  no-cgo:
+    name: No-CGO fallback
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Test and build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          go test ./...
+          go build -trimpath -o bin/cw ./cmd/cw

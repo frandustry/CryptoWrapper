@@ -1,8 +1,8 @@
 .cache/
 bin/
+dist/
 coverage.out
 coverage.html
 *.tmp
 *.cms.tmp
 .DS_Store
-
