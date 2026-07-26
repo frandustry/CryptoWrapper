@@ -13,7 +13,7 @@ file encryption.
 
 ## Requirements
 
-- Go 1.24 or newer.
+- Go 1.25 or newer.
 - OpenSSL 3.6.3+ or 4.0.1+.
 - OpenSSL headers, libraries, and `pkg-config` for the default CGO build.
 - macOS or Linux.

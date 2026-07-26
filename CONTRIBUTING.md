@@ -5,7 +5,7 @@ carefully justified algorithm support.
 
 ## Development setup
 
-Install Go 1.24+, OpenSSL 3.6.3+ development files, and `pkg-config`. Confirm
+Install Go 1.25+, OpenSSL 3.6.3+ development files, and `pkg-config`. Confirm
 the environment before making changes:
 
 ```sh

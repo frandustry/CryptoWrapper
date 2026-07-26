@@ -11,7 +11,7 @@ CryptoWrapper（`cw`）是一个更安全、更易用的 OpenSSL Go CLI 包装�
 
 ## 环境要求
 
-- Go 1.24 或更新版本。
+- Go 1.25 或更新版本。
 - OpenSSL 3.6.3+ 或 4.0.1+。
 - 默认 CGO 构建需要 OpenSSL 头文件、库和 `pkg-config`。
 - macOS 或 Linux。
