@@ -26,6 +26,7 @@ type globals struct {
 	opensslPath string
 	jsonOutput  bool
 	verbose     bool
+	allowLegacy bool
 	version     string
 	commit      string
 	date        string
@@ -50,8 +51,11 @@ func New(version, commit, date string) *cobra.Command {
 	root.PersistentFlags().StringVar(&g.opensslPath, "openssl", "", "path to the openssl executable")
 	root.PersistentFlags().BoolVar(&g.jsonOutput, "json", false, "emit stable JSON output")
 	root.PersistentFlags().BoolVarP(&g.verbose, "verbose", "v", false, "show sanitized OpenSSL commands")
+	root.PersistentFlags().BoolVar(&g.allowLegacy, "allow-legacy", false, "allow explicitly requested legacy algorithms")
 
 	root.AddCommand(newVersionCommand(g))
+	root.AddCommand(newDoctorCommand(g))
+	root.AddCommand(newAlgorithmsCommand(g))
 	root.AddCommand(newCompletionCommand(root))
 
 	return root
@@ -64,10 +68,14 @@ func newVersionCommand(g *globals) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if g.jsonOutput {
-				_, err := fmt.Fprintf(cmd.OutOrStdout(),
-					"{\"schema_version\":\"1\",\"ok\":true,\"version\":%q,\"commit\":%q,\"date\":%q}\n",
-					g.version, g.commit, g.date)
-				return err
+				return writeJSON(cmd.OutOrStdout(), result{
+					OK: true,
+					Data: map[string]string{
+						"version": g.version,
+						"commit":  g.commit,
+						"date":    g.date,
+					},
+				})
 			}
 			_, err := fmt.Fprintf(cmd.OutOrStdout(), "cw %s (commit %s, built %s)\n", g.version, g.commit, g.date)
 			return err
