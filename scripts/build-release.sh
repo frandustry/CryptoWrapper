@@ -26,6 +26,8 @@ mkdir -p "$staging_dir/$archive_name/api" "$staging_dir/$archive_name/examples"
 cp "$repo_root/api/openrpc.json" "$staging_dir/$archive_name/api/"
 cp -R "$repo_root/examples/go-rpc-client" "$repo_root/examples/swift" \
   "$staging_dir/$archive_name/examples/"
+mkdir -p "$staging_dir/$archive_name/demo"
+cp "$repo_root/demo/cryptowrapper.cast" "$staging_dir/$archive_name/demo/"
 
 tar -C "$staging_dir" -czf "$repo_root/dist/$archive_name.tar.gz" "$archive_name"
 if command -v sha256sum >/dev/null 2>&1; then

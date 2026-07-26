@@ -5,7 +5,7 @@ COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(BUILD_DATE)
 
-.PHONY: build test integration-test check install completions release clean
+.PHONY: build test integration-test check install completions demo release clean
 
 build:
 	mkdir -p bin
@@ -32,6 +32,15 @@ completions: build
 	./bin/cw completion bash > bin/completions/cw.bash
 	./bin/cw completion zsh > bin/completions/_cw
 	./bin/cw completion fish > bin/completions/cw.fish
+
+demo: build
+	command -v asciinema
+	mkdir -p demo
+	asciinema record --overwrite --output-format asciicast-v2 \
+		--idle-time-limit 1.5 --window-size 120x32 \
+		--title "CryptoWrapper quick start" \
+		--command ./scripts/asciinema-demo.sh \
+		demo/cryptowrapper.cast --return
 
 release:
 	./scripts/build-release.sh "$(VERSION)"
