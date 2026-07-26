@@ -102,7 +102,7 @@ func Resolve(explicit string) (*Client, error) {
 		var err error
 		path, err = exec.LookPath("openssl")
 		if err != nil {
-			return nil, errors.New("openssl executable not found; install OpenSSL 3.6.3+ or set CW_OPENSSL")
+			return nil, errors.New("openssl executable not found; install OpenSSL 3.6.3+ or 4.0.1+ and ensure it is on PATH, or use --openssl/CW_OPENSSL; then run 'cw doctor'")
 		}
 	}
 	info, err := os.Stat(path)
@@ -185,6 +185,25 @@ func (c *Client) Version(ctx context.Context) (Version, error) {
 		return Version{}, err
 	}
 	return ParseVersion(string(output))
+}
+
+// RequireSupported returns the installed OpenSSL version or an actionable
+// dependency error before an OpenSSL-backed operation is attempted.
+func (c *Client) RequireSupported(ctx context.Context) (Version, error) {
+	version, err := c.Version(ctx)
+	if err != nil {
+		return Version{}, fmt.Errorf(
+			"cannot use OpenSSL at %s: %w; install OpenSSL 3.6.3+ or 4.0.1+, select it with --openssl/CW_OPENSSL, then run 'cw doctor'",
+			c.Path, err,
+		)
+	}
+	if !version.Supported() {
+		return Version{}, fmt.Errorf(
+			"unsupported OpenSSL %s at %s; install OpenSSL 3.6.3+ or 4.0.1+, select it with --openssl/CW_OPENSSL, then run 'cw doctor'",
+			version, c.Path,
+		)
+	}
+	return version, nil
 }
 
 func (c *Client) Providers(ctx context.Context) ([]string, error) {

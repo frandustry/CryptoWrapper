@@ -30,7 +30,7 @@ func newDeriveCommand(g *globals) *cobra.Command {
 				return ExitError{Code: 2, Err: err}
 			}
 			defer secureio.Zero(passphrase)
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}

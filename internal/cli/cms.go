@@ -39,7 +39,7 @@ func newEncryptCommand(g *globals) *cobra.Command {
 			if err := validateAlgorithmName(cipher); err != nil {
 				return err
 			}
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}
@@ -112,7 +112,7 @@ func newDecryptCommand(g *globals) *cobra.Command {
 				return ExitError{Code: 2, Err: err}
 			}
 			defer secureio.Zero(passphrase)
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}
@@ -153,8 +153,8 @@ func newSymEncryptCommand(g *globals) *cobra.Command {
 		Short: "Encrypt a file as CMS EncryptedData using a raw symmetric key",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmslib.Available() {
-				return ExitError{Code: 3, Err: fmt.Errorf("sym-encrypt requires a CGO build linked with libcrypto")}
+			if err := requireSupportedLibcrypto("sym-encrypt"); err != nil {
+				return err
 			}
 			if err := requireInput(input); err != nil {
 				return err
@@ -202,8 +202,8 @@ func newSymDecryptCommand(g *globals) *cobra.Command {
 		Short: "Decrypt CMS EncryptedData using a raw symmetric key",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmslib.Available() {
-				return ExitError{Code: 3, Err: fmt.Errorf("sym-decrypt requires a CGO build linked with libcrypto")}
+			if err := requireSupportedLibcrypto("sym-decrypt"); err != nil {
+				return err
 			}
 			if err := requireInput(input); err != nil {
 				return err
@@ -241,8 +241,8 @@ func newPassEncryptCommand(g *globals) *cobra.Command {
 		Short: "Encrypt a file using CMS PasswordRecipientInfo",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmslib.Available() {
-				return ExitError{Code: 3, Err: fmt.Errorf("pass-encrypt requires a CGO build linked with libcrypto")}
+			if err := requireSupportedLibcrypto("pass-encrypt"); err != nil {
+				return err
 			}
 			if err := requireInput(input); err != nil {
 				return err
@@ -280,8 +280,8 @@ func newPassDecryptCommand(g *globals) *cobra.Command {
 		Short: "Decrypt CMS PasswordRecipientInfo",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmslib.Available() {
-				return ExitError{Code: 3, Err: fmt.Errorf("pass-decrypt requires a CGO build linked with libcrypto")}
+			if err := requireSupportedLibcrypto("pass-decrypt"); err != nil {
+				return err
 			}
 			if err := requireInput(input); err != nil {
 				return err

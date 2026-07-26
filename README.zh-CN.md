@@ -17,7 +17,10 @@ CryptoWrapper（`cw`）是一个更安全、更易用的 OpenSSL Go CLI 包装�
 - macOS 或 Linux。
 
 程序会拒绝 OpenSSL 3.6.0–3.6.2，因为 3.6.3 包含与 CMS 处理有关的安全修复。
-`openssl` 命令与 CGO 链接的 `libcrypto` 必须属于相同 major/minor 系列。
+`openssl` 命令与 CGO 链接的 `libcrypto` 必须属于相同 major/minor 系列。每个依赖
+OpenSSL 命令行的操作都会在执行前检查版本；直接使用 CGO CMS 的命令也会检查
+链接库版本。运行 `cw doctor` 可查看完整的路径、provider 和链接诊断。
+`cw version`、`cw completion` 以及纯 Go 的 `cw symkey` 不需要 OpenSSL 可执行文件。
 
 macOS Homebrew：
 
@@ -64,6 +67,18 @@ SHA-256 校验文件和汇总的 `SHA256SUMS`。
 
 预编译程序仍需要上文所述的兼容 OpenSSL 环境。安装包长期保存在 GitHub
 Releases 中，Actions 中转 artifact 只保留一天。
+
+当前 macOS 压缩包没有 Developer ID 签名，也没有经过 Apple 公证。推荐 macOS
+用户按上文 Homebrew 配置从源码编译。高级用户若使用预编译包，应先验证 SHA-256
+校验和，也可以在本机应用 ad-hoc 签名：
+
+```sh
+codesign --force --sign - ./cw
+codesign --verify --verbose=2 ./cw
+```
+
+ad-hoc 签名不代表 Developer ID 身份，也不等同于 Apple 公证；Gatekeeper 仍可能
+要求用户在“系统设置”中明确批准这个程序。
 
 ## 快速使用
 

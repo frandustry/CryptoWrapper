@@ -20,7 +20,11 @@ file encryption.
 
 OpenSSL 3.6.0 through 3.6.2 are rejected because 3.6.3 contains security fixes
 relevant to CMS processing. The `openssl` executable and linked `libcrypto`
-must use the same major/minor series.
+must use the same major/minor series. Every OpenSSL-backed command checks the
+CLI version before operating; direct CGO CMS commands also check the linked
+library version. Run `cw doctor` for the full path, provider, and linkage
+diagnostics. `cw version`, `cw completion`, and the pure-Go `cw symkey` command
+do not need an OpenSSL executable.
 
 macOS with Homebrew:
 
@@ -71,6 +75,20 @@ Every release includes individual SHA-256 checksum files and a consolidated
 The binaries still require a compatible OpenSSL installation as described
 above. Release assets are retained by GitHub Releases rather than as
 long-lived GitHub Actions artifacts.
+
+The macOS archives are currently unsigned and not notarized. The recommended
+macOS path is to build from source using the Homebrew setup above. Advanced
+users who choose a prebuilt archive should verify its SHA-256 checksum first
+and may apply a local ad-hoc signature:
+
+```sh
+codesign --force --sign - ./cw
+codesign --verify --verbose=2 ./cw
+```
+
+An ad-hoc signature does not identify a Developer ID and is not Apple
+notarization; Gatekeeper may still require the user to explicitly approve the
+binary in System Settings.
 
 ## Quick start
 

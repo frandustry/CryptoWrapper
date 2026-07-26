@@ -28,7 +28,7 @@ func newHashCommand(g *globals) *cobra.Command {
 			if err := requireInput(input); err != nil {
 				return err
 			}
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}

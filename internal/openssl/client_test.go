@@ -2,7 +2,13 @@
 
 package openssl
 
-import "testing"
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 func TestParseVersion(t *testing.T) {
 	version, err := ParseVersion("OpenSSL 3.6.3 9 Jun 2026")
@@ -29,6 +35,58 @@ func TestSupportedVersionFloor(t *testing.T) {
 	for _, test := range tests {
 		if got := test.version.Supported(); got != test.want {
 			t.Errorf("%s Supported() = %v, want %v", test.version, got, test.want)
+		}
+	}
+}
+
+func TestRequireSupportedRejectsOldOpenSSLWithUpgradeGuidance(t *testing.T) {
+	executable := filepath.Join(t.TempDir(), "openssl-old")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nprintf '%s\\n' 'OpenSSL 3.6.2 1 Jan 2026'\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	client := &Client{Path: executable}
+
+	_, err := client.RequireSupported(context.Background())
+	if err == nil {
+		t.Fatal("RequireSupported() unexpectedly accepted OpenSSL 3.6.2")
+	}
+	for _, text := range []string{"3.6.2", executable, "3.6.3+", "--openssl/CW_OPENSSL", "cw doctor"} {
+		if !strings.Contains(err.Error(), text) {
+			t.Errorf("RequireSupported() error %q does not contain %q", err, text)
+		}
+	}
+}
+
+func TestRequireSupportedAcceptsMinimumVersion(t *testing.T) {
+	executable := filepath.Join(t.TempDir(), "openssl-supported")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nprintf '%s\\n' 'OpenSSL 3.6.3 1 Jan 2026'\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	client := &Client{Path: executable}
+
+	version, err := client.RequireSupported(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version.String() != "3.6.3" {
+		t.Fatalf("RequireSupported() version = %s, want 3.6.3", version)
+	}
+}
+
+func TestRequireSupportedRejectsNonOpenSSLWithUpgradeGuidance(t *testing.T) {
+	executable := filepath.Join(t.TempDir(), "openssl")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nprintf '%s\\n' 'LibreSSL 3.3.6'\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	client := &Client{Path: executable}
+
+	_, err := client.RequireSupported(context.Background())
+	if err == nil {
+		t.Fatal("RequireSupported() unexpectedly accepted LibreSSL")
+	}
+	for _, text := range []string{"LibreSSL 3.3.6", "3.6.3+", "--openssl/CW_OPENSSL", "cw doctor"} {
+		if !strings.Contains(err.Error(), text) {
+			t.Errorf("RequireSupported() error %q does not contain %q", err, text)
 		}
 	}
 }

@@ -13,14 +13,44 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func clientFor(g *globals) (*openssl.Client, error) {
+func clientFor(ctx context.Context, g *globals) (*openssl.Client, error) {
 	client, err := openssl.Resolve(g.opensslPath)
 	if err != nil {
 		return nil, ExitError{Code: 3, Err: err}
 	}
 	client.Verbose = g.verbose
 	client.Log = os.Stderr
+	if _, err := client.RequireSupported(ctx); err != nil {
+		return nil, ExitError{Code: 3, Err: err}
+	}
 	return client, nil
+}
+
+func validateLibcryptoVersion(raw string) (openssl.Version, error) {
+	version, err := openssl.ParseVersion(raw)
+	if err != nil {
+		return openssl.Version{}, fmt.Errorf(
+			"cannot use linked libcrypto: %w; rebuild CryptoWrapper with OpenSSL 3.6.3+ or 4.0.1+, then run 'cw doctor'",
+			err,
+		)
+	}
+	if !version.Supported() {
+		return openssl.Version{}, fmt.Errorf(
+			"unsupported linked libcrypto %s; rebuild CryptoWrapper with OpenSSL 3.6.3+ or 4.0.1+, then run 'cw doctor'",
+			version,
+		)
+	}
+	return version, nil
+}
+
+func requireSupportedLibcrypto(command string) error {
+	if !cmslib.Available() {
+		return ExitError{Code: 3, Err: fmt.Errorf("%s requires a CGO build linked with libcrypto", command)}
+	}
+	if _, err := validateLibcryptoVersion(cmslib.LibraryVersion()); err != nil {
+		return ExitError{Code: 3, Err: err}
+	}
+	return nil
 }
 
 func newDoctorCommand(g *globals) *cobra.Command {
@@ -29,7 +59,7 @@ func newDoctorCommand(g *globals) *cobra.Command {
 		Short: "Check OpenSSL and provider compatibility",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}
@@ -51,14 +81,11 @@ func newDoctorCommand(g *globals) *cobra.Command {
 				"version":   cmslib.LibraryVersion(),
 			}
 			if cmslib.Available() {
-				libraryVersion, parseErr := openssl.ParseVersion(cmslib.LibraryVersion())
+				libraryVersion, parseErr := validateLibcryptoVersion(cmslib.LibraryVersion())
 				if parseErr != nil {
-					return ExitError{Code: 3, Err: fmt.Errorf("parse libcrypto version: %w", parseErr)}
+					return ExitError{Code: 3, Err: parseErr}
 				}
 				libcryptoData["parsed_version"] = libraryVersion
-				if !libraryVersion.Supported() {
-					return ExitError{Code: 3, Err: fmt.Errorf("unsupported libcrypto %s", libraryVersion)}
-				}
 				if libraryVersion.Major != version.Major || libraryVersion.Minor != version.Minor {
 					return ExitError{Code: 3, Err: fmt.Errorf(
 						"openssl CLI %s and libcrypto %s must use the same major/minor series",
@@ -96,11 +123,11 @@ func newAlgorithmsCommand(g *globals) *cobra.Command {
 			if len(args) == 1 {
 				category = strings.ToLower(args[0])
 			}
-			client, err := clientFor(g)
+			client, err := clientFor(cmd.Context(), g)
 			if err != nil {
 				return err
 			}
-			names, err := client.ListAlgorithms(context.Background(), category)
+			names, err := client.ListAlgorithms(cmd.Context(), category)
 			if err != nil {
 				return ExitError{Code: 3, Err: err}
 			}
