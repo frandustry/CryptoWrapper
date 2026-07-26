@@ -56,6 +56,15 @@ func New(version, commit, date string) *cobra.Command {
 	root.AddCommand(newVersionCommand(g))
 	root.AddCommand(newDoctorCommand(g))
 	root.AddCommand(newAlgorithmsCommand(g))
+	root.AddCommand(newKeygenCommand(g))
+	root.AddCommand(newSymKeyCommand(g))
+	root.AddCommand(newCertGenCommand(g))
+	root.AddCommand(newCertIssueCommand(g))
+	root.AddCommand(newSignCommand(g))
+	root.AddCommand(newVerifyCommand(g))
+	root.AddCommand(newHashCommand(g))
+	root.AddCommand(newDeriveCommand(g))
+	root.AddCommand(newInspectCommand(g))
 	root.AddCommand(newCompletionCommand(root))
 
 	return root

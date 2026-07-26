@@ -120,11 +120,51 @@ func (c *Client) Run(ctx context.Context, args ...string) ([]byte, error) {
 }
 
 func (c *Client) RunInput(ctx context.Context, input io.Reader, args ...string) ([]byte, error) {
+	return c.run(ctx, input, nil, args...)
+}
+
+// RunPassphrase supplies a passphrase over child file descriptor 3. The
+// secret never appears in argv or the environment.
+func (c *Client) RunPassphrase(ctx context.Context, passphrase []byte, args ...string) ([]byte, error) {
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		return nil, fmt.Errorf("create passphrase pipe: %w", err)
+	}
+	defer reader.Close()
+	done := make(chan error, 1)
+	go func() {
+		payload := make([]byte, len(passphrase)+1)
+		copy(payload, passphrase)
+		payload[len(payload)-1] = '\n'
+		_, writeErr := writer.Write(payload)
+		for index := range payload {
+			payload[index] = 0
+		}
+		closeErr := writer.Close()
+		if writeErr != nil {
+			done <- writeErr
+			return
+		}
+		done <- closeErr
+	}()
+	output, runErr := c.run(ctx, nil, []*os.File{reader}, args...)
+	writeErr := <-done
+	if runErr != nil {
+		return nil, runErr
+	}
+	if writeErr != nil {
+		return nil, fmt.Errorf("write passphrase pipe: %w", writeErr)
+	}
+	return output, nil
+}
+
+func (c *Client) run(ctx context.Context, input io.Reader, extraFiles []*os.File, args ...string) ([]byte, error) {
 	if c.Verbose {
 		fmt.Fprintf(c.Log, "+ %s %s\n", c.Path, strings.Join(args, " "))
 	}
 	command := exec.CommandContext(ctx, c.Path, args...)
 	command.Stdin = input
+	command.ExtraFiles = extraFiles
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	command.Stdout = &stdout
