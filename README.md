@@ -97,6 +97,16 @@ An ad-hoc signature does not identify a Developer ID and is not Apple
 notarization; Gatekeeper may still require the user to explicitly approve the
 binary in System Settings.
 
+## Video walkthrough
+
+[![Watch the complete CryptoWrapper walkthrough](https://img.youtube.com/vi/T0st5F6lxxE/maxresdefault.jpg)](https://www.youtube.com/watch?v=T0st5F6lxxE)
+
+[Watch the complete 1440p60 HDR walkthrough on YouTube](https://www.youtube.com/watch?v=T0st5F6lxxE).
+It includes chapters and English subtitles covering key generation,
+certificates, CMS encryption, signatures, hashing, key agreement,
+post-quantum algorithms, structured JSON output, compatibility controls,
+and the local JSON-RPC interface.
+
 ## Quick start
 
 [![Watch the CryptoWrapper CLI demo](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo-poster.png)](https://static.frank-ruan.com/project_specific/CryptoWrapper/CryptoWrapper-demo.mp4)
